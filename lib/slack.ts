@@ -314,7 +314,7 @@ export const updateSlackMessageDirectly = async ({
   toolCallId: string;
   originalMessage?: string;
 }) => {
-  const actionText = action === "approved" ? "✅ Approved" : "❌ Denied";
+  const actionText = action === "approved" ? "Approved" : "Denied";
   // Fallback if originalMessage is missing to prevent "undefined" in text
   const baseText = originalMessage || "Request processed";
 

@@ -79,8 +79,8 @@ export function ApprovalCard({
     }
   };
 
-  const isApproved = message.text.includes("✅ Approved");
-  const isDenied = message.text.includes("❌ Denied");
+  const isApproved = message.text.includes("Approved");
+  const isDenied = message.text.includes("Denied");
   const isPending = !isApproved && !isDenied;
   const hasActions = Boolean(
     message.blocks &&

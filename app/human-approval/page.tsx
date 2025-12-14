@@ -1,11 +1,9 @@
 import { getBotMessagesToUser } from "@/lib/slack";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle2, XCircle, Clock } from "lucide-react";
 import { ApprovalCard } from "@/components/approval-card";
 
 export default async function HumanApprovalPage() {
-  const { messages, channelId } = await getBotMessagesToUser({ limit: 1 });
-  console.log("Fetched messages:", messages[0]);
+  const { messages, channelId } = await getBotMessagesToUser({ limit: 5 });
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">

@@ -18,7 +18,6 @@ export const sendSlackApprobationMessage = async ({
   console.log("📤 Sending Slack message for tool call:", toolCallId);
 
   try {
-    // 1. Open a DM channel with the user
     const openRes = await fetch(`${SLACK_API_BASE}/conversations.open`, {
       method: "POST",
       headers: {
@@ -41,7 +40,6 @@ export const sendSlackApprobationMessage = async ({
       throw new Error("No channel ID returned from conversations.open");
     }
 
-    // 2. Post message with Approve and Deny buttons
     const messageRes = await fetch(`${SLACK_API_BASE}/chat.postMessage`, {
       method: "POST",
       headers: {
@@ -136,7 +134,6 @@ export const sendSlackApprobationMessage = async ({
   } catch (err) {
     console.error("Slack API error:", err);
 
-    // Optional: handle missing_scope (you can inspect err.message)
     if (err instanceof Error && err.message.includes("missing_scope")) {
       console.error(
         "Missing Slack scopes: ensure your app has `chat:write` and `conversations:write` scopes and reinstall the app."
@@ -165,14 +162,13 @@ export const updateSlackMessageViaResponseUrl = async ({
   try {
     const actionText = action === "approved" ? "✅ Approved" : "❌ Denied";
 
-    // Usar response_url para actualizar el mensaje
     const updateRes = await fetch(responseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
       },
       body: JSON.stringify({
-        replace_original: true, // Esto reemplaza el mensaje original
+        replace_original: true,
         text: `${actionText} by <@${userName}>`,
         blocks: [
           {
@@ -221,8 +217,6 @@ export const getBotMessagesToUser = async ({
   console.log(`📥 Retrieving last ${limit} messages for user:`, TARGET_USER_ID);
 
   try {
-    // 1. Get the DM Channel ID (Same logic as your send function)
-    // We must ensure we have the channel ID for the specific user
     const openRes = await fetch(`${SLACK_API_BASE}/conversations.open`, {
       method: "POST",
       headers: {
@@ -242,8 +236,6 @@ export const getBotMessagesToUser = async ({
 
     const channelId = openData.channel?.id;
 
-    // 2. Fetch History from that Channel
-    // We use URLSearchParams for GET requests
     const params = new URLSearchParams({
       channel: channelId,
       limit: limit.toString(),
@@ -268,10 +260,6 @@ export const getBotMessagesToUser = async ({
 
     const allMessages: SlackMessage[] = historyData.messages || [];
 
-    // 3. Filter for messages sent by the Bot
-    // Messages sent by a Slack App/Bot will typically have a 'bot_id' field.
-    // If you are using a User Token, you might need to check 'user' id instead.
-    // Assuming Bot Token here:
     const botMessages = allMessages.filter(
       (msg) => msg.bot_id !== undefined || msg.subtype === "bot_message"
     );
@@ -303,7 +291,7 @@ export const updateSlackMessageDirectly = async ({
   channelId,
   ts,
   action,
-  userName, // Ensure this is a Name (e.g., "Admin") or ID
+  userName,
   originalMessage,
   toolCallId,
 }: {
@@ -314,7 +302,7 @@ export const updateSlackMessageDirectly = async ({
   toolCallId: string;
   originalMessage?: string;
 }) => {
-  const actionText = action === "approved" ? "Approved" : "Denied";
+  const actionText = action === "approve" ? "Approved" : "Denied";
   // Fallback if originalMessage is missing to prevent "undefined" in text
   const baseText = originalMessage || "Request processed";
 
@@ -328,16 +316,13 @@ export const updateSlackMessageDirectly = async ({
       body: JSON.stringify({
         channel: channelId,
         ts: ts,
-        // The main text notification (seen in notifications/sidebars)
-        text: `${actionText} by ${userName}`,
+        text: `${baseText}\n\n${actionText} by ${userName}`,
         blocks: [
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              // We combine the original text + the status update
-              // Crucial: We do NOT add an 'actions' block here, so buttons are deleted.
-              text: `${baseText}\n\n*${actionText}*\n\n*${userName}* ${action} this request via Dashboard Simulation.`,
+              text: `${baseText}*${actionText}*\n\n*${userName}* ${action} this request via Dashboard Simulation.`,
             },
           },
           {

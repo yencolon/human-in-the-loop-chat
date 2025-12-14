@@ -1,4 +1,3 @@
-// utils/slack-verification.ts (versión boolean)
 import crypto from "crypto";
 
 export function verifySlackRequest(request: Request, rawBody: string): boolean {
@@ -22,7 +21,6 @@ export function verifySlackRequest(request: Request, rawBody: string): boolean {
       return false;
     }
 
-    // Prevenir replay attacks (5 minutos)
     const timestampNum = parseInt(slackTimestamp);
     const currentTime = Math.floor(Date.now() / 1000);
 
@@ -31,7 +29,6 @@ export function verifySlackRequest(request: Request, rawBody: string): boolean {
       return false;
     }
 
-    // Calcular firma esperada
     const sigBaseString = `v0:${slackTimestamp}:${rawBody}`;
     const expectedSignature =
       "v0=" +
@@ -40,7 +37,6 @@ export function verifySlackRequest(request: Request, rawBody: string): boolean {
         .update(sigBaseString)
         .digest("hex");
 
-    // Comparación segura
     const isValid = crypto.timingSafeEqual(
       Buffer.from(slackSignature, "utf8"),
       Buffer.from(expectedSignature, "utf8")

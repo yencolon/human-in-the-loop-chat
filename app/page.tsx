@@ -14,6 +14,7 @@ import { Response } from "@/components/ai-elements/response";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import ChatInput from "@/components/chat-input";
+import { Button } from "@/components/ui/button";
 
 const SUGGESTIONS = ["I want to return a package", "Where is my package"];
 
@@ -90,86 +91,101 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div className="flex flex-col w-full max-w-2xl pt-12 pb-24 mx-auto stretch">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2">Super Agent</h1>
-        <p className="text-muted-foreground">Ask for any assistance</p>
+    <div className="flex flex-col">
+      <div className="w-full flex justify-end p-5">
+        <Button
+          onClick={() =>
+            window.open("/human-approval", "_blank", "noopener,noreferrer")
+          }
+          className="cursor-pointer"
+        >
+          Human Approval Test
+        </Button>
       </div>
 
-      {messages.length === 0 && (
-        <div className="mb-8 space-y-4">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold mb-2">
-              How can I help you today?
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              Try one of these suggestions or ask anything about products and
-              orders.
-            </p>
-          </div>
-          <Suggestions>
-            {SUGGESTIONS.map((suggestion) => (
-              <Suggestion
-                key={suggestion}
-                suggestion={suggestion}
-                onClick={(suggestion) =>
-                  sendMessage({
-                    text: suggestion,
-                    metadata: { createdAt: Date.now() },
-                  })
-                }
-              />
-            ))}
-          </Suggestions>
+      <div className="flex flex-col w-full max-w-2xl pt-12 pb-24 mx-auto stretch">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2">Super Agent</h1>
+          <p className="text-muted-foreground">Ask for any assistance</p>
         </div>
-      )}
-      <Conversation className="mb-10">
-        <ConversationContent>
-          {messages.map((message, index) => {
-            const hasText = message.parts.some((part) => part.type === "text");
 
-            return (
-              <div key={message.id}>
-                {message.role === "assistant" &&
-                  index === messages.length - 1 &&
-                  (status === "submitted" || status === "streaming") &&
-                  !hasText && (
-                    <Shimmer className="text-sm">Thinking...</Shimmer>
-                  )}
-                <Message from={message.role}>
-                  <MessageContent>
-                    {message.parts.map((part, partIndex) => {
-                      // Render text parts
-                      if (part.type === "text") {
-                        return (
-                          <Response key={`${message.id}-text-${partIndex}`}>
-                            {part.text}
-                          </Response>
-                        );
-                      }
-                      return null;
-                    })}
-                  </MessageContent>
-                </Message>
-              </div>
-            );
-          })}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
+        {messages.length === 0 && (
+          <div className="mb-8 space-y-4">
+            <div className="text-center">
+              <h2 className="text-lg font-semibold mb-2">
+                How can I help you today?
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Try one of these suggestions or ask anything about products and
+                orders.
+              </p>
+            </div>
+            <Suggestions>
+              {SUGGESTIONS.map((suggestion) => (
+                <Suggestion
+                  key={suggestion}
+                  suggestion={suggestion}
+                  onClick={(suggestion) =>
+                    sendMessage({
+                      text: suggestion,
+                      metadata: { createdAt: Date.now() },
+                    })
+                  }
+                />
+              ))}
+            </Suggestions>
+          </div>
+        )}
+        <Conversation className="mb-10">
+          <ConversationContent>
+            {messages.map((message, index) => {
+              const hasText = message.parts.some(
+                (part) => part.type === "text"
+              );
 
-      <ChatInput
-        status={status}
-        textareaRef={textareaRef}
-        setMessages={setMessages}
-        sendMessage={(message) => {
-          sendMessage({
-            text: message.text || "",
-            metadata: message.metadata,
-          });
-        }}
-        stop={stop}
-      />
+              return (
+                <div key={message.id}>
+                  {message.role === "assistant" &&
+                    index === messages.length - 1 &&
+                    (status === "submitted" || status === "streaming") &&
+                    !hasText && (
+                      <Shimmer className="text-sm">Thinking...</Shimmer>
+                    )}
+                  <Message from={message.role}>
+                    <MessageContent>
+                      {message.parts.map((part, partIndex) => {
+                        // Render text parts
+                        if (part.type === "text") {
+                          return (
+                            <Response key={`${message.id}-text-${partIndex}`}>
+                              {part.text}
+                            </Response>
+                          );
+                        }
+                        return null;
+                      })}
+                    </MessageContent>
+                  </Message>
+                </div>
+              );
+            })}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
+
+        <ChatInput
+          status={status}
+          textareaRef={textareaRef}
+          setMessages={setMessages}
+          sendMessage={(message) => {
+            sendMessage({
+              text: message.text || "",
+              metadata: message.metadata,
+            });
+          }}
+          stop={stop}
+        />
+      </div>
     </div>
   );
 }

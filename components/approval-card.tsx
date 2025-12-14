@@ -16,7 +16,6 @@ export function ApprovalCard({
   const [loading, setLoading] = useState<"approve" | "deny" | null>(null);
   const router = useRouter();
 
-  console.log("Rendering ApprovalCard for message:", message);
   const getActionData = (
     targetAction: "approve" | "deny"
   ): HiddenActionValue | null => {

@@ -18,7 +18,7 @@ export default async function HumanApprovalPage() {
         </div>
       </div>
 
-      <ScrollArea className="h-[600px] rounded-md border p-4 shadow-sm bg-slate-50/50 dark:bg-slate-900/50">
+      <ScrollArea className="h-auto rounded-md border p-4 shadow-sm bg-slate-50/50 dark:bg-slate-900/50">
         <div className="space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-20 text-muted-foreground">

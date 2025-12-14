@@ -16,6 +16,7 @@ export function ApprovalCard({
   const [loading, setLoading] = useState<"approve" | "deny" | null>(null);
   const router = useRouter();
 
+  console.log("Rendering ApprovalCard for message:", message);
   const getActionData = (
     targetAction: "approve" | "deny"
   ): HiddenActionValue | null => {
@@ -94,7 +95,6 @@ export function ApprovalCard({
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border bg-card p-5 shadow-sm transition-all hover:shadow-md">
-      {/* Header with Status Badge */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {isApproved && <StatusBadge status="approved" />}
@@ -108,12 +108,10 @@ export function ApprovalCard({
         </div>
       </div>
 
-      {/* Message Content */}
       <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground/80">
         {message.text}
       </div>
 
-      {/* Action Buttons (Only visible if Pending and actions exist) */}
       {isPending && hasActions ? (
         <div className="flex items-center gap-3 mt-3 pt-3 border-t">
           <Button

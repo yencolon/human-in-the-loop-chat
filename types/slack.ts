@@ -83,3 +83,35 @@ export interface ToolCallSlackAction {
 export type SlackActionValue = z.infer<typeof humanApprovalResponseSchema> & {
   token: string;
 };
+
+export interface SlackMessage {
+  type: string;
+  user?: string;
+  text: string;
+  ts: string;
+  bot_id?: string;
+  app_id?: string;
+  blocks?: object[];
+  [key: string]: any;
+}
+
+// 2. Internal types for safely casting the loose 'object[]' blocks
+export interface SlackBlock {
+  type: string;
+  block_id?: string;
+  elements?: SlackBlockElement[];
+  [key: string]: any;
+}
+
+export interface SlackBlockElement {
+  type: string;
+  action_id?: string;
+  value?: string; // This is where your JSON { token, approved } lives
+  text?: any;
+}
+
+// 3. The payload expected inside the button value
+export interface HiddenActionValue {
+  approved: boolean;
+  token: string;
+}

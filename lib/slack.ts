@@ -1,4 +1,4 @@
-import { SlackActionValue } from "@/types/slack";
+import { SlackActionValue, SlackMessage } from "@/types/slack";
 
 const SLACK_TOKEN = process.env.SLACK_BOT_TOKEN;
 const SLACK_API_BASE = "https://slack.com/api";
@@ -152,13 +152,13 @@ export const sendSlackApprobationMessage = async ({
 export const updateSlackMessageViaResponseUrl = async ({
   responseUrl,
   action,
-  userId,
+  userName,
   toolCallId,
   originalMessage,
 }: {
   responseUrl: string;
   action: "approved" | "denied";
-  userId: string;
+  userName: string;
   toolCallId: string;
   originalMessage?: string;
 }) => {
@@ -173,13 +173,13 @@ export const updateSlackMessageViaResponseUrl = async ({
       },
       body: JSON.stringify({
         replace_original: true, // Esto reemplaza el mensaje original
-        text: `${actionText} by <@${userId}>`,
+        text: `${actionText} by <@${userName}>`,
         blocks: [
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `${originalMessage}\n\n*${actionText}*\n\n<@${userId}> ${action} this request.`,
+              text: `${originalMessage}\n\n*${actionText}*\n\n<@${userName}> ${action} this request.`,
             },
           },
           {
@@ -206,6 +206,163 @@ export const updateSlackMessageViaResponseUrl = async ({
     return { success: true };
   } catch (err) {
     console.error("Error updating Slack message via response_url:", err);
+    return { success: false, error: err };
+  }
+};
+
+/**
+ * This functions is merely for debugging purposes.
+ */
+export const getBotMessagesToUser = async ({
+  limit = 100,
+}: {
+  limit?: number;
+}) => {
+  console.log(`📥 Retrieving last ${limit} messages for user:`, TARGET_USER_ID);
+
+  try {
+    // 1. Get the DM Channel ID (Same logic as your send function)
+    // We must ensure we have the channel ID for the specific user
+    const openRes = await fetch(`${SLACK_API_BASE}/conversations.open`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SLACK_TOKEN}`,
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        users: TARGET_USER_ID,
+      }),
+    });
+
+    const openData = await openRes.json();
+
+    if (!openData.ok) {
+      throw new Error(`conversations.open failed: ${openData.error}`);
+    }
+
+    const channelId = openData.channel?.id;
+
+    // 2. Fetch History from that Channel
+    // We use URLSearchParams for GET requests
+    const params = new URLSearchParams({
+      channel: channelId,
+      limit: limit.toString(),
+    });
+
+    const historyRes = await fetch(
+      `${SLACK_API_BASE}/conversations.history?${params.toString()}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${SLACK_TOKEN}`,
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      }
+    );
+
+    const historyData = await historyRes.json();
+
+    if (!historyData.ok) {
+      throw new Error(`conversations.history failed: ${historyData.error}`);
+    }
+
+    const allMessages: SlackMessage[] = historyData.messages || [];
+
+    // 3. Filter for messages sent by the Bot
+    // Messages sent by a Slack App/Bot will typically have a 'bot_id' field.
+    // If you are using a User Token, you might need to check 'user' id instead.
+    // Assuming Bot Token here:
+    const botMessages = allMessages.filter(
+      (msg) => msg.bot_id !== undefined || msg.subtype === "bot_message"
+    );
+
+    console.log(
+      `Found ${botMessages.length} bot messages out of ${allMessages.length} total.`
+    );
+
+    return {
+      success: true,
+      messages: botMessages,
+      channelId: channelId,
+      hasMore: historyData.has_more,
+    };
+  } catch (err) {
+    console.error("Slack History API error:", err);
+
+    if (err instanceof Error && err.message.includes("missing_scope")) {
+      console.error(
+        "Missing Slack scopes: ensure your app has `im:history` or `channels:history` scopes."
+      );
+    }
+
+    throw err;
+  }
+};
+
+export const updateSlackMessageDirectly = async ({
+  channelId,
+  ts,
+  action,
+  userName, // Ensure this is a Name (e.g., "Admin") or ID
+  originalMessage,
+  toolCallId,
+}: {
+  channelId: string;
+  ts: string;
+  action: string;
+  userName: string;
+  toolCallId: string;
+  originalMessage?: string;
+}) => {
+  const actionText = action === "approved" ? "✅ Approved" : "❌ Denied";
+  // Fallback if originalMessage is missing to prevent "undefined" in text
+  const baseText = originalMessage || "Request processed";
+
+  try {
+    const res = await fetch(`${SLACK_API_BASE}/chat.update`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SLACK_TOKEN}`,
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        channel: channelId,
+        ts: ts,
+        // The main text notification (seen in notifications/sidebars)
+        text: `${actionText} by ${userName}`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              // We combine the original text + the status update
+              // Crucial: We do NOT add an 'actions' block here, so buttons are deleted.
+              text: `${baseText}\n\n*${actionText}*\n\n*${userName}* ${action} this request via Dashboard Simulation.`,
+            },
+          },
+          {
+            type: "context",
+            elements: [
+              {
+                type: "mrkdwn",
+                text: `ID: ${toolCallId} • Updated via Dashboard • ${new Date().toLocaleString()}`,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      throw new Error(`chat.update failed: ${data.error}`);
+    }
+
+    console.log("Message updated successfully (buttons removed)");
+    return { success: true };
+  } catch (err) {
+    console.error("Error updating Slack message:", err);
     return { success: false, error: err };
   }
 };

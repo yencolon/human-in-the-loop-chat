@@ -4,8 +4,8 @@ import { chatWorkflow } from "@/workflows/chat";
 
 // export const maxDuration = 8;
 
-export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+export async function POST(request: Request) {
+  const { messages }: { messages: UIMessage[] } = await request.json();
   const run = await start(chatWorkflow, [messages]);
   const workflowStream = run.readable;
 

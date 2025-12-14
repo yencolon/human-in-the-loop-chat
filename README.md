@@ -15,7 +15,7 @@ pnpm dev
 ### 1. Slack Bot Setup
 
 - Create a Slack app with the following scope:
-  - **User Token Scope**: `chat:write`
+  - **Bot Token Scope**: `chat:write`
 - Configure interactivity and shortcuts:
   - Set the request URL to: `yourdomain.com/api/slack-webhook`
 - Obtain and configure the **Signing Secret** in Slack's "Basic Information" section

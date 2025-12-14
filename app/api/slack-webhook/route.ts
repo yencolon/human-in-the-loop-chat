@@ -43,11 +43,15 @@ export async function POST(request: Request) {
   }
 }
 
+export async function GET() {
+  return Response.json({ status: "Slack webhook is running" });
+}
+
 // En tu handler:
 async function handleBlockActions(payload: SlackActionPayload) {
   const action = payload.actions?.[0];
   const responseUrl = payload.response_url;
-  const userId = payload.user.id;
+  const userName = payload.user.username;
   const value = JSON.parse(action.value);
   const toolCallId = value.toolCallId;
   const actionId = action.action_id;
@@ -55,7 +59,7 @@ async function handleBlockActions(payload: SlackActionPayload) {
   await updateSlackMessageViaResponseUrl({
     responseUrl,
     action: actionId === "approve_action" ? "approved" : "denied",
-    userId,
+    userName,
     toolCallId,
     originalMessage: payload.message.text,
   });

@@ -1,7 +1,7 @@
 import { createUIMessageStreamResponse } from "ai";
 import { getRun } from "workflow/api";
 
-export const maxDuration = 5;
+// export const maxDuration = 5;
 
 export async function GET(
   request: Request,

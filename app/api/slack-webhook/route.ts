@@ -43,10 +43,6 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
-  return Response.json({ status: "Slack webhook is running" });
-}
-
 // En tu handler:
 async function handleBlockActions(payload: SlackActionPayload) {
   const action = payload.actions?.[0];
